@@ -407,6 +407,7 @@
       ['primorsky', 'Приморский район', 'Ритм у моря и в сердце города'],
       ['pushkinsky', 'Пушкинский район', 'Танцевальная атмосфера за городской чертой']
     ];
+    const districtNames = Object.fromEntries(districts.map(([id, name]) => [id, name]));
 
     // Each card has its own Unsplash photo ID; no rotating or repeated local files.
     const studios = [
@@ -468,7 +469,7 @@
       let visibleCount = 0;
       districts.forEach(([district]) => {
         const matches = studios.filter(studio => {
-          const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district].join(' ').toLocaleLowerCase('ru');
+          const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district, districtNames[studio.district]].join(' ').toLocaleLowerCase('ru');
           return studio.district === district && (!query || text.includes(query));
         });
         visibleCount += matches.length;
@@ -486,9 +487,11 @@
       document.getElementById('noResults').style.display = visibleCount ? 'none' : 'block';
     }
 
+    let modalReturnFocus = null;
     function openModal(id) {
       const studio = studios.find(item => item.id === id);
       if (!studio) return;
+      modalReturnFocus = directory.querySelector(`.studio-card[data-id="${id}"]`);
       document.getElementById('modalTitle').textContent = studio.name;
       document.getElementById('modalDescription').textContent = studio.description;
       document.getElementById('modalPrice').textContent = studio.price;
@@ -503,9 +506,34 @@
     }
     function closeModal() {
       const overlay = document.getElementById('studioModal');
+      if (!overlay.classList.contains('open')) return;
       overlay.classList.remove('open');
       overlay.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      if (modalReturnFocus?.isConnected) modalReturnFocus.focus();
+      modalReturnFocus = null;
+    }
+    function trapModalFocus(event) {
+      if (event.key !== 'Tab') return;
+      const modal = document.querySelector('#studioModal .modal');
+      const focusable = [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter(element => element.getClientRects().length > 0);
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!modal.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     function toggleNav() {
       const wrap = document.getElementById('navWrap');
@@ -558,7 +586,19 @@
     });
     document.getElementById('searchInput').addEventListener('input', renderStudios);
     document.getElementById('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter') sendChatMessage(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); document.getElementById('chatbotWindow').classList.remove('open'); } });
+    document.addEventListener('keydown', event => {
+      const modalOpen = document.getElementById('studioModal').classList.contains('open');
+      if (modalOpen) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeModal();
+        } else {
+          trapModalFocus(event);
+        }
+      } else if (event.key === 'Escape') {
+        document.getElementById('chatbotWindow').classList.remove('open');
+      }
+    });
     const backTopButton = document.getElementById('backTopButton');
     const updateBackTop = () => backTopButton.classList.toggle('visible', window.scrollY > 450);
     window.addEventListener('scroll', updateBackTop, {passive: true});
