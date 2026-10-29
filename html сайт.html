@@ -156,7 +156,7 @@
     .hero-subtitle { margin: 22px 0 0; color: #f0e5ff; font-size: clamp(1.05rem, 2.5vw, 1.48rem); text-shadow: 0 0 18px rgba(183, 130, 255, .7); }
     .hero-meta { margin: 28px 0 0; color: #e0d6ed; font-size: .9rem; }
     .hero-meta span { color: #dfbfff; }
-    .search-panel { position: relative; z-index: 2; max-width: 760px; margin: -34px auto 0; padding: 0 22px; }
+    .search-panel { position: relative; z-index: 2; max-width: 1060px; margin: -34px auto 0; padding: 0 22px; }
     .search-box {
       width: 100%;
       min-height: 68px;
@@ -172,6 +172,17 @@
     .search-box::placeholder { color: #a79ab7; }
     .search-box:focus { border-color: #c392ff; box-shadow: 0 0 0 3px rgba(174, 112, 255, .18), 0 14px 48px rgba(0, 0, 0, .38); }
     .search-icon { position: absolute; left: 43px; top: 21px; width: 22px; height: 22px; color: #c69aff; pointer-events: none; }
+    .filter-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+    .filter-control { display: grid; gap: 6px; min-width: 0; color: #d7c6ea; font-size: .78rem; font-weight: 600; }
+    .filter-hint { color: #a99bb8; font-size: .7rem; font-weight: 400; }
+    .filter-select, .filter-range { width: 100%; min-height: 44px; border: 1px solid rgba(209, 168, 255, .24); border-radius: 12px; color: white; background: rgba(24, 17, 35, .96); }
+    .filter-select { padding: 0 12px; }
+    .filter-select:focus-visible, .filter-range:focus-visible, .reset-filters:focus-visible { outline: 2px solid #c392ff; outline-offset: 2px; }
+    .filter-select option { color: white; background: #181123; }
+    .filter-range { min-height: 44px; padding: 0 10px; accent-color: #b57bff; }
+    .filter-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; color: #b7adc8; font-size: .82rem; }
+    .reset-filters { padding: 8px 12px; border: 1px solid rgba(209, 168, 255, .24); border-radius: 10px; color: #eee3ff; background: rgba(255,255,255,.05); cursor: pointer; }
+    .reset-filters:hover { background: rgba(166, 104, 235, .2); }
     main { width: min(1320px, 100%); margin: auto; }
     .district-section { padding: 78px 28px 18px; }
     .district-heading { text-align: center; margin: 0 auto 34px; }
@@ -302,6 +313,9 @@
       .search-panel { margin-top: -31px; padding-inline: 17px; }
       .search-box { min-height: 60px; padding-left: 50px; font-size: .89rem; }
       .search-icon { left: 34px; top: 18px; }
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .filter-control { font-size: .74rem; }
+      .filter-footer { align-items: flex-start; }
       .district-section { padding: 63px 17px 10px; }
       .district-heading { margin-bottom: 24px; }
       .studios-grid { grid-template-columns: 1fr; gap: 14px; }
@@ -315,6 +329,10 @@
       .chatbot-trigger { right: 16px; bottom: 16px; width: 54px; height: 54px; }
       .chatbot-window { right: 16px; bottom: 82px; }
       .back-top { right: 19px; bottom: 82px; width: 44px; height: 44px; }
+    }
+    @media (max-width: 480px) {
+      .filter-grid { grid-template-columns: 1fr; }
+      .filter-footer { flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
@@ -346,9 +364,46 @@
   <div class="search-panel">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     <input id="searchInput" class="search-box" type="search" placeholder="Найти студию, стиль, адрес или метро..." aria-label="Поиск студий">
+    <div class="filter-grid" aria-label="Фильтры каталога">
+      <label class="filter-control">Стиль танца
+        <select class="filter-select" id="styleFilter"><option value="">Любой стиль</option></select>
+      </label>
+      <label class="filter-control">Район
+        <select class="filter-select" id="districtFilter"><option value="">Все районы</option></select>
+      </label>
+      <label class="filter-control">Уровень подготовки
+        <select class="filter-select" id="levelFilter">
+          <option value="">Любой уровень</option>
+          <option value="beginner">Новичок</option>
+          <option value="intermediate">Средний</option>
+          <option value="advanced">Продвинутый</option>
+        </select>
+        <small class="filter-hint">Определяется по тегам и описанию студии</small>
+      </label>
+      <label class="filter-control">Максимальная цена
+        <input class="filter-range" id="priceFilter" type="range" min="1200" max="2000" step="50" value="2000">
+        <output id="priceFilterValue" for="priceFilter">до 2 000 ₽ / месяц</output>
+      </label>
+      <label class="filter-control">Сортировка по стоимости
+        <select class="filter-select" id="sortFilter">
+          <option value="default">Как в каталоге</option>
+          <option value="price-asc">Сначала дешевле</option>
+          <option value="price-desc">Сначала дороже</option>
+        </select>
+      </label>
+    </div>
+    <div class="filter-footer">
+      <span id="resultsCount" role="status" aria-live="polite"></span>
+      <button class="reset-filters" id="resetFilters" type="button">Сбросить фильтры</button>
+    </div>
   </div>
 
-  <main id="directory"></main>
+  <main id="directory">
+    <section class="district-section" id="sortedResults" hidden>
+      <div class="district-heading"><span class="district-name">Сортировка</span><h2>Студии по стоимости</h2><div class="section-rule"></div></div>
+      <div class="studios-grid" id="sortedStudioGrid"></div>
+    </section>
+  </main>
   <div class="no-results" id="noResults"><strong>Ничего не нашлось</strong>Попробуйте другой район, стиль или станцию метро.</div>
 
   <section class="about" id="about">
@@ -407,6 +462,8 @@
       ['primorsky', 'Приморский район', 'Ритм у моря и в сердце города'],
       ['pushkinsky', 'Пушкинский район', 'Танцевальная атмосфера за городской чертой']
     ];
+    const districtNames = Object.fromEntries(districts.map(([id, name]) => [id, name]));
+    const danceStyles = ['Ballet', 'Bachata', 'Contemporary', 'Dance Hall', 'Dance workout', 'Freestyle', 'Fusion', 'HIP HOP', 'House', 'Jazz Funk', 'K-pop', 'Latin', 'Modern', 'Pole dance', 'Salsa', 'Street'];
 
     // Each card has its own Unsplash photo ID; no rotating or repeated local files.
     const studios = [
@@ -451,6 +508,48 @@
     const directory = document.getElementById('directory');
     const districtElements = {};
     const nav = document.getElementById('districtNav');
+    const styleFilter = document.getElementById('styleFilter');
+    const districtFilter = document.getElementById('districtFilter');
+    const levelFilter = document.getElementById('levelFilter');
+    const priceFilter = document.getElementById('priceFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const priceFilterValue = document.getElementById('priceFilterValue');
+
+    danceStyles.sort((a, b) => a.localeCompare(b, 'ru')).forEach(style => {
+      const option = document.createElement('option');
+      option.value = style.toLocaleLowerCase('ru');
+      option.textContent = style;
+      styleFilter.append(option);
+    });
+    districts.forEach(([id, name]) => {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = name;
+      districtFilter.append(option);
+    });
+
+    const getStudioPrice = studio => Number(studio.price.match(/\d[\d\s]*/)?.[0].replace(/\s/g, '')) || 0;
+    const studioPrices = studios.map(getStudioPrice);
+    priceFilter.min = String(Math.min(...studioPrices));
+    priceFilter.max = String(Math.max(...studioPrices));
+    priceFilter.value = priceFilter.max;
+    function getStudioLevel(studio) {
+      const details = [...studio.tags, studio.description].join(' ').toLocaleLowerCase('ru');
+      if (/beginner|gentle start|нович|основ|базов|мягкий старт|первые шаги/.test(details)) return 'beginner';
+      if (/performance|technique|open trainings|freestyle|сцен|профессион|отточить техник|выступ|серьёзн/.test(details)) return 'advanced';
+      return 'intermediate';
+    }
+    function studioCardMarkup(studio, showDistrict = false) {
+      return `
+        <article class="studio-card" data-id="${studio.id}" tabindex="0" role="button" aria-label="Подробнее: ${studio.name}">
+          <div class="photo-wrap"><img class="card-img" src="${photoUrl(studio.photo)}" alt="${studio.name} — танцевальный зал" loading="lazy"><span class="photo-count">${String(studio.id).padStart(2, '0')} / 33</span></div>
+          <div class="card-content"><h3 class="studio-name">${studio.name}</h3>
+            <div class="studio-tags">${studio.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}${showDistrict ? `<span class="tag">${districtNames[studio.district]}</span>` : ''}</div>
+            <div class="studio-info"><div class="info-line"><span class="info-icon">⌖</span><span>${studio.address}</span></div><div class="info-line"><span class="info-icon">↗</span><span>${studio.metro}</span></div></div>
+            <div class="contacts-row"><span class="contact-icon">☎</span><span>${studio.phone}</span></div>
+          </div>
+        </article>`;
+    }
 
     districts.forEach(([id, name, title]) => {
       const section = document.createElement('section');
@@ -467,25 +566,55 @@
     });
     function renderStudios() {
       const query = document.getElementById('searchInput').value.trim().toLocaleLowerCase('ru');
-      let visibleCount = 0;
-      districts.forEach(([district]) => {
-        const matches = studios.filter(studio => {
-          const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district].join(' ').toLocaleLowerCase('ru');
-          return studio.district === district && (!query || text.includes(query));
-        });
-        visibleCount += matches.length;
-        districtElements[district].closest('section').hidden = !matches.length;
-        districtElements[district].innerHTML = matches.map(studio => `
-          <article class="studio-card" data-id="${studio.id}" tabindex="0" role="button" aria-label="Подробнее: ${studio.name}">
-            <div class="photo-wrap"><img class="card-img" src="${photoUrl(studio.photo)}" alt="${studio.name} — танцевальный зал" loading="lazy"><span class="photo-count">${String(studio.id).padStart(2, '0')} / 33</span></div>
-            <div class="card-content"><h3 class="studio-name">${studio.name}</h3>
-              <div class="studio-tags">${studio.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
-              <div class="studio-info"><div class="info-line"><span class="info-icon">⌖</span><span>${studio.address}</span></div><div class="info-line"><span class="info-icon">↗</span><span>${studio.metro}</span></div></div>
-              <div class="contacts-row"><span class="contact-icon">☎</span><span>${studio.phone}</span></div>
-            </div>
-          </article>`).join('');
+      const selectedStyle = styleFilter.value;
+      const selectedDistrict = districtFilter.value;
+      const selectedLevel = levelFilter.value;
+      const maxPrice = Number(priceFilter.value);
+      const sortOrder = sortFilter.value;
+      const filteredStudios = studios.filter(studio => {
+        const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district, districtNames[studio.district]].join(' ').toLocaleLowerCase('ru');
+        return (!query || text.includes(query))
+          && (!selectedStyle || studio.tags.some(tag => {
+            const normalizedTag = tag.toLocaleLowerCase('ru');
+            return normalizedTag === selectedStyle || normalizedTag.startsWith(`${selectedStyle} `);
+          }))
+          && (!selectedDistrict || studio.district === selectedDistrict)
+          && (!selectedLevel || getStudioLevel(studio) === selectedLevel)
+          && getStudioPrice(studio) <= maxPrice;
       });
-      document.getElementById('noResults').style.display = visibleCount ? 'none' : 'block';
+      if (sortOrder === 'price-asc') filteredStudios.sort((a, b) => getStudioPrice(a) - getStudioPrice(b) || a.id - b.id);
+      if (sortOrder === 'price-desc') filteredStudios.sort((a, b) => getStudioPrice(b) - getStudioPrice(a) || a.id - b.id);
+      const sortedResults = document.getElementById('sortedResults');
+      const showSortedResults = sortOrder !== 'default';
+      sortedResults.hidden = !showSortedResults;
+      document.getElementById('sortedStudioGrid').innerHTML = showSortedResults
+        ? filteredStudios.map(studio => studioCardMarkup(studio, true)).join('')
+        : '';
+      districts.forEach(([district]) => {
+        const districtStudios = filteredStudios.filter(studio => studio.district === district);
+        const section = districtElements[district].closest('section');
+        section.hidden = showSortedResults || !districtStudios.length;
+        districtElements[district].innerHTML = showSortedResults
+          ? ''
+          : districtStudios.map(studio => studioCardMarkup(studio)).join('');
+      });
+      document.getElementById('noResults').style.display = filteredStudios.length ? 'none' : 'block';
+      document.getElementById('resultsCount').textContent = `Найдено студий: ${filteredStudios.length}`;
+      document.getElementById('resultsCount').textContent = `Найдено студий: ${visibleCount}`;
+    }
+
+    function updatePriceFilterLabel() {
+      priceFilterValue.textContent = `до ${Number(priceFilter.value).toLocaleString('ru-RU')} ₽ / месяц`;
+    }
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      styleFilter.value = '';
+      districtFilter.value = '';
+      levelFilter.value = '';
+      priceFilter.value = priceFilter.max;
+      sortFilter.value = 'default';
+      updatePriceFilterLabel();
+      renderStudios();
     }
 
     function openModal(id) {
@@ -559,6 +688,14 @@
       if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openModal(Number(card.dataset.id)); }
     });
     document.getElementById('searchInput').addEventListener('input', renderStudios);
+    [styleFilter, districtFilter, levelFilter, priceFilter, sortFilter].forEach(filter => {
+      const eventName = filter === priceFilter ? 'input' : 'change';
+      filter.addEventListener(eventName, () => {
+        updatePriceFilterLabel();
+        renderStudios();
+      });
+    });
+    document.getElementById('resetFilters').addEventListener('click', resetFilters);
     document.getElementById('chatInput').addEventListener('keydown', event => { if (event.key === 'Enter') sendChatMessage(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); document.getElementById('chatbotWindow').classList.remove('open'); } });
     const backTopButton = document.getElementById('backTopButton');
@@ -566,6 +703,7 @@
     window.addEventListener('scroll', updateBackTop, {passive: true});
     backTopButton.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
     updateBackTop();
+    updatePriceFilterLabel();
     renderStudios();
   </script>
 </body>
