@@ -407,6 +407,7 @@
       ['primorsky', 'Приморский район', 'Ритм у моря и в сердце города'],
       ['pushkinsky', 'Пушкинский район', 'Танцевальная атмосфера за городской чертой']
     ];
+    const districtNames = Object.fromEntries(districts.map(([id, name]) => [id, name]));
 
     // Each card has its own Unsplash photo ID; no rotating or repeated local files.
     const studios = [
@@ -468,7 +469,7 @@
       let visibleCount = 0;
       districts.forEach(([district]) => {
         const matches = studios.filter(studio => {
-          const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district].join(' ').toLocaleLowerCase('ru');
+          const text = [studio.name, studio.tags.join(' '), studio.address, studio.metro, studio.description, studio.district, districtNames[studio.district]].join(' ').toLocaleLowerCase('ru');
           return studio.district === district && (!query || text.includes(query));
         });
         visibleCount += matches.length;
